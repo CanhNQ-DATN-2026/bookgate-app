@@ -107,33 +107,22 @@ access key or secret key is set in the environment.
 
 ## Production secrets (AWS Secrets Manager)
 
-The Helm chart reads from a Kubernetes Secret named `bookgate-secret`
-(configurable via `existingSecret` in `values.yaml`). The secret must
-contain these keys: `DATABASE_URL`, `SECRET_KEY`, `ADMIN_PASSWORD`, `OPENAI_API_KEY`.
+Secrets flow automatically from AWS Secrets Manager into pods via
+External Secrets Operator — no manual `kubectl` steps needed.
 
-### Primary path — External Secrets Operator
-
-In production the secret is synced automatically from AWS Secrets Manager
-using [External Secrets Operator](https://external-secrets.io/). The
-Terraform repo creates the Secrets Manager entry; ESO keeps the K8s Secret
-in sync. No manual `kubectl` step is needed on upgrades.
-
-### Fallback — manual bootstrap (first-time or non-ESO environments)
-
-If ESO is not yet installed, create the secret once manually before the
-first `helm install`:
-
-```bash
-kubectl create secret generic bookgate-secret \
-  --namespace bookgate \
-  --from-literal=DATABASE_URL="postgresql://..." \
-  --from-literal=SECRET_KEY="..." \
-  --from-literal=ADMIN_PASSWORD="..." \
-  --from-literal=OPENAI_API_KEY="sk-..."
+```
+Terraform → AWS Secrets Manager "bookgate/prod"
+                    ↓
+           ESO (ClusterSecretStore + ExternalSecret in Helm chart)
+                    ↓
+           K8s Secret "bookgate-secret" (auto-created and synced)
+                    ↓
+           Pod env vars via secretKeyRef
 ```
 
-This is a bootstrap fallback only. In steady-state production the secret
-should be managed by ESO, not by hand.
+The Helm chart includes the `ExternalSecret` object. ESO and the
+`ClusterSecretStore` are installed once at cluster level — see the
+helm repo README for setup instructions.
 
 ---
 
