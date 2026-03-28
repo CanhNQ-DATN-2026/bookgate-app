@@ -31,7 +31,8 @@ Provision infra    →    Build & push images  →  Update image tags
 
 ### Step 1 — Terraform (infra repo)
 Provisions EKS, RDS, S3, ECR repos, and AWS Secrets Manager entries.
-Outputs: `ecr_registry_url`, `s3_bucket_name`, `rds_endpoint`, `secret_name`.
+Key outputs: `ecr_registry_url`, `s3_bucket_name`, `rds_endpoint`,
+`db_credentials_secret_arn`, `app_secrets_secret_arn`.
 
 ### Step 2 — App repo CI (this repo)
 Triggered on merge to `main`.
@@ -52,7 +53,7 @@ docker push $ECR/bookgate/frontend:$IMAGE_TAG
 ```
 
 `VITE_API_URL` is baked into the frontend bundle at build time.
-Leave it empty (default) if the API is on the same domain as the frontend.
+Leave it empty if the API is on the same domain as the frontend.
 
 ### Step 3 — Helm repo (manual tag bump)
 After images are pushed, update `values.yaml` in the helm repo:
@@ -67,9 +68,6 @@ chatService:
 frontend:
   image:
     tag: "abc1234"
-migrate:
-  image:
-    tag: "abc1234"
 ```
 
 Commit and push → Helm repo CI runs `helm upgrade`.
@@ -82,68 +80,106 @@ Commit and push → Helm repo CI runs `helm upgrade`.
 
 | Variable | Source |
 |---|---|
-| `DATABASE_URL` | `bookgate-secret` (AWS Secrets Manager → K8s Secret) |
-| `SECRET_KEY` | `bookgate-secret` |
-| `ADMIN_PASSWORD` | `bookgate-secret` |
-| `S3_BUCKET_NAME` | Terraform output `s3_bucket_name` (set in `values.yaml`) |
-| `AWS_DEFAULT_REGION` | Set in `values.yaml` (e.g. `ap-southeast-1`) |
-| `ADMIN_EMAIL` | Set in `values.yaml` |
-| `ADMIN_FULL_NAME` | Set in `values.yaml` |
-| `CORS_ORIGINS` | Set in `values.yaml` (frontend domain) |
+| `DATABASE_URL` | `bookgate-secret` ← ESO ← SM `bookgate/dev/app-secrets` |
+| `SECRET_KEY` | `bookgate-secret` ← ESO ← SM `bookgate/dev/app-secrets` |
+| `ADMIN_PASSWORD` | `bookgate-secret` ← ESO ← SM `bookgate/dev/app-secrets` |
+| `S3_BUCKET_NAME` | `values.yaml` → `apiService.env.s3BucketName` |
+| `AWS_DEFAULT_REGION` | `values.yaml` → `apiService.env.awsDefaultRegion` |
+| `ADMIN_EMAIL` | `values.yaml` → `apiService.env.adminEmail` |
+| `ADMIN_FULL_NAME` | `values.yaml` → `apiService.env.adminFullName` |
+| `CORS_ORIGINS` | `values.yaml` → `apiService.env.corsOrigins` |
 
-Credentials for S3 are provided by IRSA (IAM Roles for Service Accounts) — no
-access key or secret key is set in the environment.
+S3 credentials are provided by IRSA — no access key or secret key in env.
 
 ### chat-service
 
 | Variable | Source |
 |---|---|
-| `SECRET_KEY` | `bookgate-secret` |
-| `OPENAI_API_KEY` | `bookgate-secret` |
-| `API_SERVICE_URL` | K8s ClusterIP DNS (set by Helm: `http://bookgate-api-service:8000`) |
-| `CORS_ORIGINS` | Set in `values.yaml` (frontend domain) |
+| `SECRET_KEY` | `bookgate-secret` ← ESO ← SM `bookgate/dev/app-secrets` |
+| `OPENAI_API_KEY` | `bookgate-secret` ← ESO ← SM `bookgate/dev/app-secrets` |
+| `API_SERVICE_URL` | Helm: `http://bookgate-api-service:8000` |
+| `CORS_ORIGINS` | `values.yaml` → `chatService.env.corsOrigins` |
 
 ---
 
-## Production secrets (AWS Secrets Manager)
+## Secrets flow
 
-Secrets flow automatically from AWS Secrets Manager into pods via
-External Secrets Operator — no manual `kubectl` steps needed.
+Terraform creates the SM secret shell; operator populates it once; ESO syncs
+it into the cluster automatically on every deploy.
 
 ```
-Terraform → AWS Secrets Manager "bookgate/prod"
-                    ↓
-           ESO (ClusterSecretStore + ExternalSecret in Helm chart)
-                    ↓
-           K8s Secret "bookgate-secret" (auto-created and synced)
-                    ↓
-           Pod env vars via secretKeyRef
+Terraform
+  └─ creates SM secret "bookgate/dev/app-secrets" (empty shell)
+  └─ outputs: rds_endpoint, db_credentials_secret_arn
+
+Operator (one-time after terraform apply)
+  └─ constructs DATABASE_URL from rds_endpoint + RDS master password
+  └─ populates SM "bookgate/dev/app-secrets" with all four keys
+
+ESO (running in cluster with IRSA)
+  └─ reads ExternalSecret CR (deployed by Helm chart)
+  └─ syncs SM secret → K8s Secret "bookgate-secret"
+
+Pods
+  └─ read env vars via secretKeyRef from bookgate-secret
 ```
 
-The Helm chart includes the `ExternalSecret` object. ESO and the
-`ClusterSecretStore` are installed once at cluster level — see the
-helm repo README for setup instructions.
+See helm repo README for the exact SM population command and ClusterSecretStore
+setup.
 
 ---
 
 ## Database migrations
 
-Migrations run automatically as a Helm pre-install/pre-upgrade Job before any
-application Pod starts. To run manually:
+Migration is an **explicit operational step** — not a Helm hook.
+It must be run **after** confirming `bookgate-secret` is synced.
 
 ```bash
-kubectl run migrate --rm -it --restart=Never \
-  --image=$ECR/bookgate/api-service:$TAG \
-  --env-from=secret/bookgate-secret \
-  -- bash scripts/migrate.sh
+# 1. Verify secret exists
+kubectl get secret bookgate-secret -n bookgate
+
+# 2. Run migration job
+IMAGE="<ECR_REGISTRY>/bookgate/api-service:<IMAGE_TAG>"
+
+kubectl apply -f - <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bookgate-migrate-$(date +%Y%m%d%H%M%S)
+  namespace: bookgate
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: $IMAGE
+          command: ["bash", "scripts/migrate.sh"]
+          envFrom:
+            - secretRef:
+                name: bookgate-secret
+          env:
+            - name: ADMIN_EMAIL
+              value: "admin@bookgate.com"
+            - name: ADMIN_FULL_NAME
+              value: "System Admin"
+            - name: S3_BUCKET_NAME
+              value: "<S3_BUCKET_NAME>"
+            - name: AWS_DEFAULT_REGION
+              value: "ap-southeast-1"
+EOF
 ```
+
+Migration runs: Alembic `upgrade head` + admin account bootstrap (idempotent).
 
 ---
 
 ## Validation
 
 ```bash
-# Build all images locally
+# Build all images
 docker build -t bookgate/api-service:test ./api-service
 docker build -t bookgate/chat-service:test ./chat-service
 docker build -t bookgate/frontend:test ./frontend
@@ -152,13 +188,12 @@ docker build -t bookgate/frontend:test ./frontend
 cd ../helm-charts
 helm lint bookgate/
 
-# Helm template (dry-run)
+# Helm template dry-run
 helm template bookgate bookgate/ \
   --set ecr.registry=123456789.dkr.ecr.ap-southeast-1.amazonaws.com \
   --set apiService.image.tag=abc1234 \
   --set chatService.image.tag=abc1234 \
   --set frontend.image.tag=abc1234 \
-  --set migrate.image.tag=abc1234 \
   --set apiService.env.s3BucketName=bookgate-prod \
   --set ingress.host=bookgate.example.com
 ```
