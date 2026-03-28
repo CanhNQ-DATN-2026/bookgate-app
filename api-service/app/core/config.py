@@ -3,35 +3,30 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # Database
+    # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str
 
-    # JWT
+    # ── JWT ───────────────────────────────────────────────────────────────────
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
 
-    # MinIO
-    MINIO_ENDPOINT: str = "localhost:9000"
-    MINIO_ACCESS_KEY: str = "minioadmin"
-    MINIO_SECRET_KEY: str = "minioadmin123"
-    MINIO_BUCKET_NAME: str = "bookgate"
-    MINIO_PUBLIC_URL: str = "http://localhost:9000"
-    MINIO_SECURE: bool = False
+    # ── S3 ────────────────────────────────────────────────────────────────────
+    S3_BUCKET_NAME: str
+    AWS_DEFAULT_REGION: str = "ap-southeast-1"
 
-    # Seed admin
+    # ── Seed admin (used by migration job) ────────────────────────────────────
     ADMIN_EMAIL: str = "admin@bookgate.com"
-    ADMIN_PASSWORD: str = "admin123"
+    ADMIN_PASSWORD: str
     ADMIN_FULL_NAME: str = "System Admin"
 
-    # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    # ── CORS ──────────────────────────────────────────────────────────────────
+    CORS_ORIGINS: str = "https://bookgate.example.com"
 
     def get_cors_origins(self) -> List[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        return [o.strip() for o in self.CORS_ORIGINS.split(",")]
 
-    class Config:
-        env_file = ".env"
+    model_config = {"env_file": ".env"}
 
 
 settings = Settings()
