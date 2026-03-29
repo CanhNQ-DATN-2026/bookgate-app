@@ -1,38 +1,44 @@
 # Bookgate App — CLAUDE.md
 
 ## Repo overview
-Monorepo chứa 3 services: `api-service` (FastAPI), `chat-service` (FastAPI), `frontend` (React/Vite + nginx).
-Không có local dev Docker Compose — chạy production trên EKS qua helm-charts repo.
+Repo này chứa đúng 3 services production:
+- `api-service` — FastAPI, PostgreSQL, Alembic, JWT auth, S3 storage
+- `chat-service` — FastAPI, OpenAI chat, gọi `api-service`
+- `frontend` — React/Vite build static, serve bằng nginx
+
+Không còn `docker-compose`, `gateway`, `backend` duplicate, hay local-only runtime path.
 
 ## Service map
 
-### api-service (port 8000)
-- **Stack**: FastAPI + SQLAlchemy + Alembic + PostgreSQL + boto3 (S3)
-- **Entry**: `app/main.py` → router tại `app/api/v1/router.py`
-- **Endpoints**: `auth`, `books`, `users`, `admin`, `upload_requests`
-- **DB models**: `app/models/` — user, book, book_upload_request, download_request, download_history
-- **Config**: `app/core/config.py` — đọc từ env vars
-- **S3**: `app/services/storage.py` — upload/download/delete book files
-- **Auth**: JWT tại `app/core/security.py`, deps tại `app/core/deps.py`
-- **Migrations**: Alembic, chạy qua `scripts/migrate.sh` (Helm pre-upgrade Job)
-
-### chat-service (port 8001)
-- **Stack**: FastAPI + OpenAI + httpx (gọi api-service)
-- **Entry**: `app/main.py`
-- **Modules**: `app/chat.py` (OpenAI logic), `app/auth.py` (verify JWT), `app/config.py`
-- **Gọi api-service** qua env `API_SERVICE_URL`
-
-### frontend (port 80)
-- **Stack**: React + Vite, serve bằng nginx
-- **Build arg**: `VITE_API_URL` — mặc định empty (dùng relative URL qua Ingress)
-- **nginx config**: `nginx.conf` — SPA routing, mọi path fallback về `index.html`
-
-## Environment variables (runtime)
-
 ### api-service
-| Var | Source |
-|-----|--------|
-| `DATABASE_URL` | K8s Secret `bookgate-secret` (ESO từ SM) |
+- Port: `8000`
+- Entry: `app/main.py`
+- Router: `app/api/v1/router.py`
+- Auth/JWT: `app/core/security.py`, `app/core/deps.py`
+- DB: `app/core/database.py`
+- Storage: `app/services/storage.py` dùng `boto3` để làm việc với S3
+- Migration script: `scripts/migrate.sh`
+- Seed script: `scripts/seed.py` chỉ bootstrap admin account, không tạo sample data
+
+### chat-service
+- Port: `8001`
+- Entry: `app/main.py`
+- Auth strategy: không tự verify JWT local; forward Bearer token sang `api-service /api/v1/auth/me`
+- Config chính: `OPENAI_API_KEY`, `API_SERVICE_URL`, `CORS_ORIGINS`
+
+### frontend
+- Port container: `80`
+- Build: Vite build
+- Runtime: nginx
+- Health endpoint: `/health`
+- SPA fallback trong `nginx.conf`
+
+## Runtime contract
+
+### api-service env
+| Variable | Source |
+|---|---|
+| `DATABASE_URL` | K8s Secret `bookgate-secret` |
 | `SECRET_KEY` | K8s Secret `bookgate-secret` |
 | `ADMIN_PASSWORD` | K8s Secret `bookgate-secret` |
 | `S3_BUCKET_NAME` | Helm values |
@@ -41,30 +47,58 @@ Không có local dev Docker Compose — chạy production trên EKS qua helm-cha
 | `ADMIN_FULL_NAME` | Helm values |
 | `CORS_ORIGINS` | Helm values |
 
-### chat-service
-| Var | Source |
-|-----|--------|
+### chat-service env
+| Variable | Source |
+|---|---|
 | `SECRET_KEY` | K8s Secret `bookgate-secret` |
 | `OPENAI_API_KEY` | K8s Secret `bookgate-secret` |
-| `API_SERVICE_URL` | Helm (auto: `http://<release>-api-service:8000`) |
+| `API_SERVICE_URL` | Helm-generated ClusterIP URL |
 | `CORS_ORIGINS` | Helm values |
 
+### Secret flow
+- Terraform tạo shell secret trong AWS Secrets Manager: `${project}/${environment}/app-secrets`
+- Operator populate secret đó một lần với 4 keys:
+  - `DATABASE_URL`
+  - `SECRET_KEY`
+  - `ADMIN_PASSWORD`
+  - `OPENAI_API_KEY`
+- ESO trong cluster sync sang K8s Secret `bookgate-secret`
+- Pods đọc bằng `secretKeyRef`
+
+App pods không gọi trực tiếp AWS Secrets Manager.
+
+## S3 / IRSA
+- `api-service` cần IRSA để gọi S3
+- `chat-service` và `frontend` không cần IRSA
+- `api-service` không dùng access key/secret key trong env; credential lấy từ IRSA
+
+## Migration
+- Migration là bước explicit, không phải Helm hook
+- Chỉ chạy sau khi `bookgate-secret` đã sync xong
+- `scripts/migrate.sh` chạy:
+  - `alembic upgrade head`
+  - bootstrap admin account idempotent
+
 ## CI/CD
-- Pipeline: `.gitlab-ci.yml` — 3 jobs build song song (`build-api`, `build-chat`, `build-frontend`)
-- Dùng Docker-in-Docker (`docker:26` + `docker:26-dind`)
-- Auth ECR: OIDC → `AssumeRoleWithWebIdentity` → `aws ecr get-login-password`
-- Image tag: `$CI_COMMIT_SHORT_SHA`
-- Push tới ECR: `$ECR_REGISTRY/bookgate/{api-service,chat-service,frontend}:<tag>`
-- **Không tự trigger helm** — deploy helm riêng biệt
+- Pipeline file: `.gitlab-ci.yml`
+- Chỉ có stage `build`
+- Build song song 3 images:
+  - `bookgate/api-service`
+  - `bookgate/chat-service`
+  - `bookgate/frontend`
+- Auth AWS: GitLab OIDC → `AssumeRoleWithWebIdentity`
+- Push lên ECR qua `ECR_REGISTRY`
+- Repo này không tự deploy Helm và không trigger repo Helm
 
-## CI variables (GitLab repo settings)
-| Variable | Mô tả |
-|----------|-------|
-| `AWS_ROLE_ARN` | IAM role cho CI (cần `ecr:*` permissions) |
-| `AWS_REGION` | `us-east-1` |
-| `ECR_REGISTRY` | `392423995152.dkr.ecr.us-east-1.amazonaws.com` (terraform output `ecr_registry_url`) |
+## CI variables
+| Variable | Meaning |
+|---|---|
+| `AWS_ROLE_ARN` | IAM role cho app CI, dùng để push ECR |
+| `AWS_REGION` | AWS region |
+| `ECR_REGISTRY` | Registry prefix, ví dụ `392423995152.dkr.ecr.us-east-1.amazonaws.com` |
 
-## Quan trọng
-- Runner phải có `privileged = true` trong config.toml để chạy Docker-in-Docker
-- Không có unit test hiện tại — không cần chạy test trước khi build
-- Health check endpoint: `GET /health` (cả api-service và chat-service)
+## Important notes
+- Runner phải hỗ trợ Docker-in-Docker và `privileged = true`
+- `SECRET_KEY` thực sự được dùng ở `api-service` để ký/verify JWT
+- `chat-service` hiện nhận `SECRET_KEY` qua env nhưng không tự decode JWT; token được verify qua `api-service`
+- Nếu frontend deploy cùng origin với API, `VITE_API_URL` có thể để rỗng để dùng relative path
