@@ -109,7 +109,7 @@ Required GitLab CI variables:
 
 Notes:
 - runner must support Docker-in-Docker and `privileged = true`
-- build job installs AWS CLI v2 standalone in the CI container to avoid Alpine Python package issues
+- build job uses a Debian-based CI image and installs `awscli` plus Docker CLI from apt packages
 - `ECR_REGISTRY` must be registry host only, for example `392423995152.dkr.ecr.us-east-1.amazonaws.com`
 - `AWS_REGION` must match the region embedded in `ECR_REGISTRY`
 - this repo currently does not trigger the Helm repo automatically
