@@ -3,8 +3,8 @@ stages:
 
 variables:
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
-  DOCKER_HOST: tcp://docker:2376
-  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
 
 # ── ECR auth + Docker-in-Docker ───────────────────────────────────────────────
 # Requires: runner with privileged = true
