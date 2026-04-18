@@ -98,17 +98,19 @@ Pipeline file: `.gitlab-ci.yml`
 Behavior:
 - stage: `build`
 - 3 parallel jobs: `build-api`, `build-chat`, `build-frontend`
-- GitLab OIDC -> `AssumeRoleWithWebIdentity`
+- GitLab OIDC -> web identity credentials for AWS CLI
 - login to ECR
 - build and push images
 
 Required GitLab CI variables:
 - `AWS_ROLE_ARN`
 - `AWS_REGION`
-- `ECR_REGISTRY`
+- `ECR_REGISTRY` — Terraform output `ecr_registry_url`
 
 Notes:
 - runner must support Docker-in-Docker and `privileged = true`
+- `ECR_REGISTRY` must be registry host only, for example `392423995152.dkr.ecr.us-east-1.amazonaws.com`
+- `AWS_REGION` must match the region embedded in `ECR_REGISTRY`
 - this repo currently does not trigger the Helm repo automatically
 
 ## Migrations

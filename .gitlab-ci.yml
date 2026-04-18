@@ -8,7 +8,10 @@ variables:
 
 # ── ECR auth + Docker-in-Docker ───────────────────────────────────────────────
 # Requires: runner with privileged = true
-# CI variables: AWS_ROLE_ARN, AWS_REGION, ECR_REGISTRY
+# CI variables:
+#   AWS_ROLE_ARN  — IAM role assumable via GitLab OIDC
+#   AWS_REGION    — AWS region, must match Terraform deployment region
+#   ECR_REGISTRY  — Terraform output ecr_registry_url (registry host only)
 .ecr_build: &ecr_build
   image: docker:26
   services:
@@ -17,18 +20,34 @@ variables:
     GITLAB_OIDC_TOKEN:
       aud: https://gitlab.com
   before_script:
-    - apk add --no-cache aws-cli jq > /dev/null
     - |
-      CREDS=$(aws sts assume-role-with-web-identity \
-        --role-arn          "$AWS_ROLE_ARN" \
-        --role-session-name "gitlab-build-${CI_PIPELINE_ID}" \
-        --web-identity-token "$GITLAB_OIDC_TOKEN" \
-        --region            "$AWS_REGION" \
-        --duration-seconds  3600 \
-        --query Credentials --output json)
-      export AWS_ACCESS_KEY_ID=$(echo "$CREDS"     | jq -r .AccessKeyId)
-      export AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | jq -r .SecretAccessKey)
-      export AWS_SESSION_TOKEN=$(echo "$CREDS"     | jq -r .SessionToken)
+      set -eu
+      apk add --no-cache python3 py3-pip > /dev/null
+      pip3 install --no-cache-dir awscli > /dev/null
+
+      : "${AWS_ROLE_ARN:?AWS_ROLE_ARN is required}"
+      : "${AWS_REGION:?AWS_REGION is required}"
+      : "${ECR_REGISTRY:?ECR_REGISTRY is required}"
+      : "${GITLAB_OIDC_TOKEN:?GITLAB_OIDC_TOKEN is required}"
+
+      case "$ECR_REGISTRY" in
+        */*)
+          echo "ECR_REGISTRY must be the registry host only, for example 123456789012.dkr.ecr.us-east-1.amazonaws.com"
+          exit 1
+          ;;
+        *.dkr.ecr."$AWS_REGION".amazonaws.com) ;;
+        *)
+          echo "ECR_REGISTRY ($ECR_REGISTRY) does not match AWS_REGION ($AWS_REGION)"
+          exit 1
+          ;;
+      esac
+
+      export AWS_DEFAULT_REGION="$AWS_REGION"
+      export AWS_STS_REGIONAL_ENDPOINTS=regional
+      export AWS_WEB_IDENTITY_TOKEN_FILE="${CI_PROJECT_DIR}/.gitlab_oidc_token"
+      printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+
+      aws sts get-caller-identity > /dev/null
     - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
 # ── Build jobs (run in parallel) ─────────────────────────────────────────────
