@@ -13,7 +13,7 @@ variables:
 #   AWS_REGION    — AWS region, must match Terraform deployment region
 #   ECR_REGISTRY  — Terraform output ecr_registry_url (registry host only)
 .ecr_build: &ecr_build
-  image: docker:26
+  image: ubuntu:24.04
   services:
     - docker:26-dind
   id_tokens:
@@ -22,8 +22,9 @@ variables:
   before_script:
     - |
       set -eu
-      apk add --no-cache python3 py3-pip > /dev/null
-      pip3 install --no-cache-dir awscli > /dev/null
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update -qq
+      apt-get install -y --no-install-recommends awscli ca-certificates docker.io > /dev/null
 
       : "${AWS_ROLE_ARN:?AWS_ROLE_ARN is required}"
       : "${AWS_REGION:?AWS_REGION is required}"
@@ -48,6 +49,7 @@ variables:
       printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
 
       aws sts get-caller-identity > /dev/null
+      docker version > /dev/null
     - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
 # ── Build jobs (run in parallel) ─────────────────────────────────────────────
