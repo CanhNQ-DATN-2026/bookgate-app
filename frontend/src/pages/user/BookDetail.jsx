@@ -82,11 +82,19 @@ export default function BookDetail() {
   const handleDownload = async () => {
     setActionLoading(true);
     setMessage({ type: "", text: "" });
+    const downloadWindow = window.open("", "_blank", "noopener,noreferrer");
     try {
       const res = await downloadBook(id);
-      window.open(res.data.download_url, "_blank");
+      if (downloadWindow) {
+        downloadWindow.location.replace(res.data.download_url);
+      } else {
+        window.location.assign(res.data.download_url);
+      }
       setMessage({ type: "success", text: "✓ Download started!" });
     } catch (err) {
+      if (downloadWindow) {
+        downloadWindow.close();
+      }
       setMessage({ type: "error", text: err.response?.data?.detail || "Download failed." });
     } finally {
       setActionLoading(false);

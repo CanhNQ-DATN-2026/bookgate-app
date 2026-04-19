@@ -19,10 +19,18 @@ export default function MyDownloadHistory() {
 
   const handleRedownload = async (bookId) => {
     setDlLoading(bookId);
+    const downloadWindow = window.open("", "_blank", "noopener,noreferrer");
     try {
       const res = await downloadBook(bookId);
-      window.open(res.data.download_url, "_blank");
+      if (downloadWindow) {
+        downloadWindow.location.replace(res.data.download_url);
+      } else {
+        window.location.assign(res.data.download_url);
+      }
     } catch (err) {
+      if (downloadWindow) {
+        downloadWindow.close();
+      }
       alert(err.response?.data?.detail || "Download failed.");
     } finally {
       setDlLoading(null);
