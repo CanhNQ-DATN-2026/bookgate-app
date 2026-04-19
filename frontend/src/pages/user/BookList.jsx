@@ -95,10 +95,11 @@ export default function BookList() {
           />
         </div>
         <input
+          className="glass-filter-input"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Category"
-          style={{ width: 160, padding: "9px 13px", border: "1.5px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: "0.9rem", fontFamily: "inherit" }}
+          style={{ width: 160 }}
         />
         <button className="btn btn-primary" type="submit">Search</button>
         {(search || category) && (

@@ -20,9 +20,13 @@ export function Navbar() {
 
   return (
     <nav className="navbar">
-      <span className="navbar-brand">
-        📚 Book<span>gate</span>
-      </span>
+      <div className="navbar-brand-wrap">
+        <span className="navbar-brand-badge">BG</span>
+        <span className="navbar-brand-copy">
+          <span className="navbar-brand-kicker">Digital Library</span>
+          <span className="navbar-brand">Book<span>gate</span></span>
+        </span>
+      </div>
 
       <div className="navbar-links">
         {isAdmin ? (
@@ -47,11 +51,12 @@ export function Navbar() {
 
       <div className="navbar-right">
         <button className="btn-theme" onClick={toggle} title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
-          {theme === "dark" ? "☀" : "🌙"}
+          <span className="theme-glyph">{theme === "dark" ? "☀" : "☾"}</span>
         </button>
-        <span className="navbar-user" title={user.full_name}>
-          {initials} · {user.full_name.split(" ")[0]}
-        </span>
+        <div className="navbar-user-pill" title={user.full_name}>
+          <span className="navbar-user-avatar">{initials}</span>
+          <span className="navbar-user-name">{user.full_name.split(" ")[0]}</span>
+        </div>
         <button className="btn-logout" onClick={handleLogout}>Sign out</button>
       </div>
     </nav>

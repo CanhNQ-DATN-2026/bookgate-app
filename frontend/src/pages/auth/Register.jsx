@@ -28,41 +28,61 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      <div className="auth-box">
-        <div className="auth-logo">
-          <div className="logo-icon">📚</div>
-          <h1>Book<span>gate</span></h1>
+      <div className="auth-shell">
+        <div className="auth-showcase">
+          <span className="auth-showcase-badge">Reader Access</span>
+          <h2 className="auth-showcase-title">Create your library passport.</h2>
+          <p className="auth-showcase-copy">
+            Build a profile, request the books you need, and keep every approved download organized in one place.
+          </p>
+          <div className="auth-showcase-grid">
+            <div className="auth-showcase-card">
+              <span>Profile</span>
+              <strong>Reader identity</strong>
+            </div>
+            <div className="auth-showcase-card">
+              <span>History</span>
+              <strong>Tracked downloads</strong>
+            </div>
+          </div>
         </div>
 
-        <h2>Create account</h2>
-        <p className="subtitle">Join the library today</p>
+        <div className="auth-box">
+          <div className="auth-logo">
+            <div className="logo-icon">📚</div>
+            <h1>Book<span>gate</span></h1>
+          </div>
 
-        {error && <div className="alert alert-error">⚠ {error}</div>}
+          <h2>Create account</h2>
+          <p className="subtitle">Join the library today</p>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Full Name</label>
-            <input value={form.full_name} onChange={set("full_name")} placeholder="Jane Doe" required />
-          </div>
-          <div className="form-group">
-            <label>Email address</label>
-            <input type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" required />
-          </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input type="password" value={form.password} onChange={set("password")} placeholder="Min. 6 characters" required />
-          </div>
-          <div className="form-group">
-            <label>Confirm Password</label>
-            <input type="password" value={form.confirm} onChange={set("confirm")} placeholder="Repeat password" required />
-          </div>
-          <button className="btn btn-primary btn-block btn-lg" style={{ marginTop: 4 }} disabled={loading}>
-            {loading ? "Creating account…" : "Create Account"}
-          </button>
-        </form>
+          {error && <div className="alert alert-error">⚠ {error}</div>}
 
-        <div className="auth-footer" style={{ marginTop: 24 }}>
-          Already have an account?&nbsp;<Link to="/login">Sign in</Link>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Full Name</label>
+              <input value={form.full_name} onChange={set("full_name")} placeholder="Jane Doe" required />
+            </div>
+            <div className="form-group">
+              <label>Email address</label>
+              <input type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" required />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input type="password" value={form.password} onChange={set("password")} placeholder="Min. 6 characters" required />
+            </div>
+            <div className="form-group">
+              <label>Confirm Password</label>
+              <input type="password" value={form.confirm} onChange={set("confirm")} placeholder="Repeat password" required />
+            </div>
+            <button className="btn btn-primary btn-block btn-lg" style={{ marginTop: 4 }} disabled={loading}>
+              {loading ? "Creating account…" : "Create Account"}
+            </button>
+          </form>
+
+          <div className="auth-footer" style={{ marginTop: 24 }}>
+            Already have an account?&nbsp;<Link to="/login">Sign in</Link>
+          </div>
         </div>
       </div>
     </div>
