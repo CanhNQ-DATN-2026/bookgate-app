@@ -13,5 +13,6 @@ RUN chmod +x scripts/migrate.sh
 
 EXPOSE 8000
 
-# Migrations run via the Helm pre-install/pre-upgrade Job (scripts/migrate.sh).
+# Migrations run via the Helm pre-install/pre-upgrade Job (scripts/migrate.sh),
+# so the main container only needs to start the API server.
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
