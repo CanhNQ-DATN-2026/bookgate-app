@@ -1069,17 +1069,17 @@ tbody tr:hover td { background: var(--surface-2); }
   --warning-light: rgba(255, 184, 77, 0.16);
   --info: #55c4ff;
   --info-light: rgba(85, 196, 255, 0.16);
-  --bg: #f4f7ff;
-  --surface: rgba(255, 255, 255, 0.64);
-  --surface-2: rgba(255, 255, 255, 0.44);
-  --border: rgba(255, 255, 255, 0.56);
+  --bg: #eef3fb;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-2: rgba(255, 255, 255, 0.68);
+  --border: rgba(200, 212, 236, 0.92);
   --border-focus: rgba(109, 124, 255, 0.55);
-  --text: #15203a;
-  --text-secondary: #33415f;
-  --text-muted: #61718f;
-  --text-subtle: #8a98b8;
-  --nav-bg: rgba(16, 24, 48, 0.58);
-  --nav-text: rgba(235, 241, 255, 0.82);
+  --text: #101b31;
+  --text-secondary: #243654;
+  --text-muted: #465a7d;
+  --text-subtle: #65789d;
+  --nav-bg: rgba(9, 18, 36, 0.82);
+  --nav-text: rgba(244, 248, 255, 0.92);
   --nav-hover: rgba(255, 255, 255, 0.12);
   --nav-active-bg: rgba(126, 145, 255, 0.18);
   --nav-active: #f8fbff;
@@ -1104,16 +1104,16 @@ tbody tr:hover td { background: var(--surface-2); }
   --info: #74d4ff;
   --info-light: rgba(116, 212, 255, 0.18);
   --bg: #061122;
-  --surface: rgba(12, 22, 41, 0.64);
-  --surface-2: rgba(15, 30, 52, 0.52);
-  --border: rgba(151, 174, 255, 0.16);
+  --surface: rgba(10, 18, 34, 0.84);
+  --surface-2: rgba(15, 26, 46, 0.72);
+  --border: rgba(122, 149, 224, 0.3);
   --border-focus: rgba(152, 167, 255, 0.6);
-  --text: #f2f6ff;
-  --text-secondary: #d9e4ff;
-  --text-muted: #98abc9;
-  --text-subtle: #7182a3;
-  --nav-bg: rgba(6, 14, 31, 0.72);
-  --nav-text: rgba(231, 238, 255, 0.8);
+  --text: #f6f9ff;
+  --text-secondary: #e3ecff;
+  --text-muted: #b7c5df;
+  --text-subtle: #93a5c3;
+  --nav-bg: rgba(4, 10, 24, 0.9);
+  --nav-text: rgba(240, 245, 255, 0.92);
   --nav-hover: rgba(255, 255, 255, 0.08);
   --nav-active-bg: rgba(152, 167, 255, 0.16);
   --nav-active: #ffffff;
@@ -1130,7 +1130,7 @@ body {
     radial-gradient(circle at 18% 20%, rgba(115, 142, 255, 0.28), transparent 28%),
     radial-gradient(circle at 82% 16%, rgba(92, 219, 255, 0.22), transparent 24%),
     radial-gradient(circle at 78% 84%, rgba(255, 176, 209, 0.24), transparent 26%),
-    linear-gradient(180deg, rgba(248, 250, 255, 0.98), rgba(238, 244, 255, 0.92));
+    linear-gradient(180deg, rgba(245, 248, 254, 0.99), rgba(232, 239, 251, 0.96));
   background-attachment: fixed;
   color: var(--text);
 }
@@ -1247,9 +1247,10 @@ body::after {
   height: 72px;
   border-radius: 999px;
   background: var(--nav-bg);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: var(--shadow);
   gap: 12px;
+  color: var(--nav-text);
 }
 
 .navbar-brand-wrap {
@@ -1287,7 +1288,7 @@ body::after {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(231, 238, 255, 0.56);
+  color: rgba(231, 238, 255, 0.72);
 }
 
 .navbar-brand {
@@ -1308,6 +1309,7 @@ body::after {
   border-radius: 999px;
   font-weight: 600;
   letter-spacing: 0.01em;
+  color: var(--nav-text);
 }
 
 .nav-link.active {
@@ -1320,9 +1322,9 @@ body::after {
   gap: 10px;
   padding: 6px 8px 6px 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #edf3ff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f5f8ff;
 }
 
 .navbar-user-avatar {
@@ -1362,8 +1364,8 @@ body::after {
   margin-bottom: 26px;
   padding: 18px 22px;
   border-radius: calc(var(--radius-lg) + 2px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.24));
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(245, 249, 255, 0.72));
+  border: 1px solid rgba(205, 218, 239, 0.92);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1377,8 +1379,8 @@ body::after {
 .modal,
 .chat-panel,
 .stat-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.46));
-  border: 1px solid rgba(255, 255, 255, 0.56);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 250, 255, 0.78));
+  border: 1px solid rgba(205, 218, 239, 0.92);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1388,8 +1390,8 @@ body::after {
 [data-theme="dark"] .modal,
 [data-theme="dark"] .chat-panel,
 [data-theme="dark"] .stat-card {
-  background: linear-gradient(180deg, rgba(18, 30, 54, 0.74), rgba(12, 22, 42, 0.62));
-  border-color: rgba(151, 174, 255, 0.18);
+  background: linear-gradient(180deg, rgba(13, 24, 44, 0.92), rgba(10, 19, 36, 0.84));
+  border-color: rgba(122, 149, 224, 0.3);
 }
 
 .card,
@@ -1448,14 +1450,16 @@ body::after {
 
 .btn-secondary,
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.44);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(205, 218, 239, 0.92);
+  color: var(--text);
 }
 
 [data-theme="dark"] .btn-secondary,
 [data-theme="dark"] .btn-ghost {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(122, 149, 224, 0.3);
+  color: var(--text-secondary);
 }
 
 .form-group input,
@@ -1464,10 +1468,11 @@ body::after {
 .search-input-wrap input,
 .glass-filter-input,
 .chat-input {
-  background: rgba(255, 255, 255, 0.52);
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(205, 218, 239, 0.95);
   border-radius: 18px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  color: var(--text);
 }
 
 [data-theme="dark"] .form-group input,
@@ -1476,8 +1481,16 @@ body::after {
 [data-theme="dark"] .search-input-wrap input,
 [data-theme="dark"] .glass-filter-input,
 [data-theme="dark"] .chat-input {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(8, 16, 30, 0.92);
+  border-color: rgba(122, 149, 224, 0.3);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.search-input-wrap input::placeholder,
+.glass-filter-input::placeholder,
+.chat-input::placeholder {
+  color: var(--text-subtle);
 }
 
 .glass-filter-input {
@@ -1488,27 +1501,27 @@ body::after {
 }
 
 .table-wrapper {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.34));
-  border: 1px solid rgba(255, 255, 255, 0.58);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 249, 255, 0.74));
+  border: 1px solid rgba(205, 218, 239, 0.92);
 }
 
 thead th {
-  background: rgba(255, 255, 255, 0.44);
+  background: rgba(233, 240, 251, 0.92);
 }
 
 tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.34);
+  background: rgba(238, 244, 253, 0.92);
 }
 
 .book-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.48));
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 249, 255, 0.8));
+  border: 1px solid rgba(205, 218, 239, 0.92);
   box-shadow: var(--shadow-sm);
 }
 
 [data-theme="dark"] .book-card {
-  background: linear-gradient(180deg, rgba(18, 30, 54, 0.76), rgba(14, 23, 40, 0.64));
-  border-color: rgba(151, 174, 255, 0.14);
+  background: linear-gradient(180deg, rgba(13, 24, 44, 0.94), rgba(10, 19, 36, 0.86));
+  border-color: rgba(122, 149, 224, 0.28);
 }
 
 .book-card-cover {
@@ -1521,7 +1534,8 @@ tbody tr:hover td {
 .quote-banner {
   border-left: none;
   border-radius: 28px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.36));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(245, 248, 255, 0.72));
+  border: 1px solid rgba(205, 218, 239, 0.92);
 }
 
 .quote-mark {
@@ -1536,8 +1550,8 @@ tbody tr:hover td {
 .search-bar {
   padding: 14px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(205, 218, 239, 0.92);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1567,10 +1581,10 @@ tbody tr:hover td {
 .auth-showcase {
   padding: 40px 36px;
   border-radius: 36px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.09));
+  border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 28px 80px rgba(3, 8, 30, 0.28);
-  color: #eef3ff;
+  color: #f8fbff;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -1598,7 +1612,7 @@ tbody tr:hover td {
 
 .auth-showcase-copy {
   max-width: 42ch;
-  color: rgba(234, 242, 255, 0.78);
+  color: rgba(244, 248, 255, 0.9);
   font-size: 1rem;
   line-height: 1.7;
 }
@@ -1613,8 +1627,8 @@ tbody tr:hover td {
 .auth-showcase-card {
   padding: 18px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .auth-showcase-card span {
@@ -1622,7 +1636,7 @@ tbody tr:hover td {
   font-size: 0.76rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(228, 236, 255, 0.62);
+  color: rgba(236, 242, 255, 0.74);
   margin-bottom: 10px;
 }
 
@@ -1634,7 +1648,8 @@ tbody tr:hover td {
 .auth-box {
   max-width: none;
   padding: 40px 34px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.66));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 255, 0.86));
+  border: 1px solid rgba(205, 218, 239, 0.92);
 }
 
 .auth-logo .logo-icon {
@@ -1653,7 +1668,7 @@ tbody tr:hover td {
 }
 
 .chat-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 250, 255, 0.8));
 }
 
 .chat-header {
@@ -1661,20 +1676,20 @@ tbody tr:hover td {
 }
 
 .chat-input-area {
-  background: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .download-box,
 .file-input-wrap,
 .tab-bar {
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .empty-state {
   padding: 54px 24px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.26);
-  border: 1px dashed rgba(255, 255, 255, 0.46);
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px dashed rgba(205, 218, 239, 0.92);
 }
 
 .badge {
