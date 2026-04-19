@@ -20,22 +20,88 @@ env:
   HELM_REPO: CanhNQ-DATN-2026/helm-repo
 
 jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has_changes: ${{ steps.matrix.outputs.has_changes }}
+      api_changed: ${{ steps.filter.outputs.api_service }}
+      chat_changed: ${{ steps.filter.outputs.chat_service }}
+      frontend_changed: ${{ steps.filter.outputs.frontend }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changed Paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api_service:
+              - 'api-service/**'
+            chat_service:
+              - 'chat-service/**'
+            frontend:
+              - 'frontend/**'
+
+      - name: Build Matrix
+        id: matrix
+        shell: bash
+        env:
+          API_CHANGED: ${{ steps.filter.outputs.api_service }}
+          CHAT_CHANGED: ${{ steps.filter.outputs.chat_service }}
+          FRONTEND_CHANGED: ${{ steps.filter.outputs.frontend }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          matrix='{"include":[]}'
+
+          add_service() {
+            local name="$1"
+            local context="$2"
+            local image_repo="$3"
+            matrix="$(jq \
+              --arg name "$name" \
+              --arg context "$context" \
+              --arg image_repo "$image_repo" \
+              '.include += [{"name": $name, "context": $context, "image_repo": $image_repo}]' \
+              <<<"$matrix")"
+          }
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$API_CHANGED" = "true" ]; then
+            add_service "api-service" "api-service" "bookgate/api-service"
+          fi
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$CHAT_CHANGED" = "true" ]; then
+            add_service "chat-service" "chat-service" "bookgate/chat-service"
+          fi
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$FRONTEND_CHANGED" = "true" ]; then
+            add_service "frontend" "frontend" "bookgate/frontend"
+          fi
+
+          echo "matrix=$(jq -c . <<<"$matrix")" >> "$GITHUB_OUTPUT"
+
+          if [ "$(jq '.include | length' <<<"$matrix")" -gt 0 ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-push:
     name: Build ${{ matrix.name }}
     runs-on: ubuntu-latest
+    needs:
+      - detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: api-service
-            context: api-service
-            image_repo: bookgate/api-service
-          - name: chat-service
-            context: chat-service
-            image_repo: bookgate/chat-service
-          - name: frontend
-            context: frontend
-            image_repo: bookgate/frontend
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
 
     steps:
       - name: Checkout
@@ -96,7 +162,9 @@ jobs:
     name: Update Helm Repo Image Tags
     runs-on: ubuntu-latest
     needs:
+      - detect-changes
       - build-and-push
+    if: needs.detect-changes.outputs.has_changes == 'true'
 
     steps:
       - name: Checkout Helm Repo
@@ -114,15 +182,28 @@ jobs:
 
       - name: Update Helm Values
         shell: bash
+        env:
+          API_CHANGED: ${{ needs.detect-changes.outputs.api_changed }}
+          CHAT_CHANGED: ${{ needs.detect-changes.outputs.chat_changed }}
+          FRONTEND_CHANGED: ${{ needs.detect-changes.outputs.frontend_changed }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
 
           values_file="helm-repo/bookgate/values.yaml"
           image_tag="${{ steps.image.outputs.tag }}"
 
-          perl -0pi -e 's/(apiService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' "$values_file"
-          perl -0pi -e 's/(chatService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' "$values_file"
-          perl -0pi -e 's/(frontend:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' "$values_file"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$API_CHANGED" = "true" ]; then
+            perl -0pi -e 's/(apiService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' "$values_file"
+          fi
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$CHAT_CHANGED" = "true" ]; then
+            perl -0pi -e 's/(chatService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' "$values_file"
+          fi
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$FRONTEND_CHANGED" = "true" ]; then
+            perl -0pi -e 's/(frontend:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' "$values_file"
+          fi
 
       - name: Commit And Push Helm Repo
         shell: bash
@@ -134,7 +215,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           if git diff --quiet -- bookgate/values.yaml; then
-            echo "Helm values already point to ${GITHUB_SHA::7}; nothing to commit."
+            echo "Helm values already point to the requested image tags; nothing to commit."
             exit 0
           fi
 
