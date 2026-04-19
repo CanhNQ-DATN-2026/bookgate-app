@@ -108,12 +108,39 @@ jobs:
           cd helm-repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          image_tag="${GITHUB_SHA::7}"
+
+          update_values() {
+            perl -0pi -e 's/(chatService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' bookgate/values.yaml
+          }
+
+          update_values
 
           if git diff --quiet -- bookgate/values.yaml; then
-            echo "Helm values already point to ${GITHUB_SHA::7}; nothing to commit."
+            echo "Helm values already point to ${image_tag}; nothing to commit."
             exit 0
           fi
 
           git add bookgate/values.yaml
-          git commit -m "chore: bump chat-service image tag to ${GITHUB_SHA::7}"
-          git push origin main
+          git commit -m "chore: bump chat-service image tag to ${image_tag}"
+
+          for attempt in 1 2 3; do
+            if git push origin main; then
+              exit 0
+            fi
+
+            echo "Push failed on attempt ${attempt}; rebasing on latest helm-repo/main and retrying."
+            git pull --rebase origin main
+            update_values
+
+            if git diff --quiet -- bookgate/values.yaml; then
+              echo "Desired chat image tag already present after rebase."
+              exit 0
+            fi
+
+            git add bookgate/values.yaml
+            git commit --amend --no-edit
+          done
+
+          echo "Failed to push updated Helm values after 3 attempts."
+          exit 1
