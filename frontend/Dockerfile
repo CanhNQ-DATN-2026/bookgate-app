@@ -9,7 +9,7 @@ RUN npm install --frozen-lockfile
 COPY . .
 
 # VITE_API_URL is baked into the bundle at build time.
-# Default is empty string → axios uses relative URLs (works behind any Ingress).
+# Default is empty string so the frontend uses relative URLs behind the same Ingress.
 # Override with --build-arg VITE_API_URL=https://api.example.com if the API
 # is on a different origin than the frontend.
 ARG VITE_API_URL=""
