@@ -1364,13 +1364,18 @@ body::after {
   margin-bottom: 26px;
   padding: 18px 22px;
   border-radius: calc(var(--radius-lg) + 2px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(245, 249, 255, 0.72));
+  background: linear-gradient(135deg, rgba(250, 252, 255, 0.94), rgba(238, 245, 255, 0.86));
   border: 1px solid rgba(205, 218, 239, 0.92);
   box-shadow: var(--shadow-sm);
 }
 
 .page-header h1 {
   font-size: 1.78rem;
+  color: var(--text);
+}
+
+.page-header p {
+  color: var(--text-muted);
 }
 
 .card,
@@ -1501,7 +1506,7 @@ body::after {
 }
 
 .table-wrapper {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 249, 255, 0.74));
+  background: linear-gradient(180deg, rgba(250, 252, 255, 0.92), rgba(243, 248, 255, 0.82));
   border: 1px solid rgba(205, 218, 239, 0.92);
 }
 
@@ -1514,7 +1519,7 @@ tbody tr:hover td {
 }
 
 .book-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 249, 255, 0.8));
+  background: linear-gradient(180deg, rgba(250, 252, 255, 0.94), rgba(241, 247, 255, 0.84));
   border: 1px solid rgba(205, 218, 239, 0.92);
   box-shadow: var(--shadow-sm);
 }
@@ -1534,12 +1539,20 @@ tbody tr:hover td {
 .quote-banner {
   border-left: none;
   border-radius: 28px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(245, 248, 255, 0.72));
+  background: linear-gradient(135deg, rgba(250, 252, 255, 0.94), rgba(241, 246, 255, 0.84));
   border: 1px solid rgba(205, 218, 239, 0.92);
 }
 
 .quote-mark {
   color: rgba(94, 112, 255, 0.36);
+}
+
+.quote-text {
+  color: var(--text-secondary);
+}
+
+.quote-author {
+  color: var(--primary-dark);
 }
 
 .stat-card::after {
@@ -1550,7 +1563,7 @@ tbody tr:hover td {
 .search-bar {
   padding: 14px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(250, 252, 255, 0.9);
   border: 1px solid rgba(205, 218, 239, 0.92);
   box-shadow: var(--shadow-sm);
 }
@@ -1690,6 +1703,70 @@ tbody tr:hover td {
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.68);
   border: 1px dashed rgba(205, 218, 239, 0.92);
+}
+
+[data-theme="dark"] .page-header,
+[data-theme="dark"] .quote-banner,
+[data-theme="dark"] .search-bar,
+[data-theme="dark"] .table-wrapper,
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .download-box,
+[data-theme="dark"] .file-input-wrap,
+[data-theme="dark"] .tab-bar {
+  background: linear-gradient(180deg, rgba(14, 24, 43, 0.94), rgba(10, 18, 34, 0.88));
+  border-color: rgba(122, 149, 224, 0.28);
+}
+
+[data-theme="dark"] thead th {
+  background: rgba(19, 31, 56, 0.96);
+}
+
+[data-theme="dark"] tbody tr:hover td {
+  background: rgba(18, 30, 54, 0.88);
+}
+
+[data-theme="dark"] .page-header h1,
+[data-theme="dark"] .book-card h3,
+[data-theme="dark"] .empty-state h3,
+[data-theme="dark"] .download-box h3 {
+  color: #f6f9ff;
+}
+
+[data-theme="dark"] .page-header p,
+[data-theme="dark"] .quote-text,
+[data-theme="dark"] .book-card .author,
+[data-theme="dark"] .empty-state p,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .search-input-wrap .search-icon,
+[data-theme="dark"] .glass-filter-input,
+[data-theme="dark"] .search-input-wrap input,
+[data-theme="dark"] .book-meta-item .meta-key,
+[data-theme="dark"] .book-meta-item .meta-val {
+  color: #b8c7e4;
+}
+
+[data-theme="dark"] .quote-author,
+[data-theme="dark"] .book-category-tag {
+  color: #aebcff;
+}
+
+[data-theme="dark"] .book-category-tag {
+  background: rgba(109, 124, 255, 0.16);
+}
+
+[data-theme="dark"] .quote-mark {
+  color: rgba(168, 184, 255, 0.22);
+}
+
+[data-theme="dark"] .search-input-wrap input,
+[data-theme="dark"] .glass-filter-input {
+  background: rgba(20, 30, 50, 0.96);
+}
+
+[data-theme="dark"] .search-input-wrap input::placeholder,
+[data-theme="dark"] .glass-filter-input::placeholder,
+[data-theme="dark"] .chat-input::placeholder {
+  color: #8ea2c6;
 }
 
 .badge {
