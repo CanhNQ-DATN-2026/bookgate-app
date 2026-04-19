@@ -1,0 +1,88 @@
+name: Build And Push Images
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: bookgate-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+
+jobs:
+  build-and-push:
+    name: Build ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api-service
+            context: api-service
+            image_repo: bookgate/api-service
+          - name: chat-service
+            context: chat-service
+            image_repo: bookgate/chat-service
+          - name: frontend
+            context: frontend
+            image_repo: bookgate/frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate ECR Registry
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          : "${AWS_REGION:?AWS_REGION repository variable is required}"
+          : "${ECR_REGISTRY:?ECR_REGISTRY repository variable is required}"
+
+          case "$ECR_REGISTRY" in
+            */*)
+              echo "ECR_REGISTRY must be the registry host only, for example 123456789012.dkr.ecr.us-east-1.amazonaws.com"
+              exit 1
+              ;;
+            *.dkr.ecr."$AWS_REGION".amazonaws.com) ;;
+            *)
+              echo "ECR_REGISTRY ($ECR_REGISTRY) does not match AWS_REGION ($AWS_REGION)"
+              exit 1
+              ;;
+          esac
+
+      - name: Set Image Tag
+        id: image
+        shell: bash
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: github-actions-bookgate-build
+
+      - name: Login To Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build And Push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ matrix.image_repo }}:${{ steps.image.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
