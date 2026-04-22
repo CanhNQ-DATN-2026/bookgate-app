@@ -7,9 +7,9 @@ function RequestForm({ note, setNote, showNoteForm, setShowNoteForm, onSubmit, l
   return (
     <div>
       {showNoteForm ? (
-        <div>
-          <div className="form-group" style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: "0.82rem" }}>
+        <div className="request-form">
+          <div className="form-group form-group-tight">
+            <label className="detail-section-label">
               Note for admin <span className="text-muted">(optional)</span>
             </label>
             <textarea
@@ -17,11 +17,11 @@ function RequestForm({ note, setNote, showNoteForm, setShowNoteForm, onSubmit, l
               onChange={(e) => setNote(e.target.value)}
               placeholder="Why do you need this book? Any specific reason…"
               rows={3}
-              style={{ fontSize: "0.855rem" }}
+              className="detail-note-input"
             />
           </div>
           <div className="flex-gap">
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={onSubmit} disabled={loading}>
+            <button className="btn btn-primary btn-flex" onClick={onSubmit} disabled={loading}>
               {loading ? "Submitting…" : "Submit Request"}
             </button>
             <button className="btn btn-secondary btn-sm" onClick={() => { setShowNoteForm(false); setNote(""); }}>
@@ -102,16 +102,16 @@ export default function BookDetail() {
   };
 
   if (loading) return (
-    <div>
-      <button className="btn btn-secondary btn-sm" onClick={() => navigate("/books")} style={{ marginBottom: 20 }}>← Back</button>
+    <div className="detail-page">
+      <button className="btn btn-secondary btn-sm back-link" onClick={() => navigate("/books")}>← Back</button>
       <div className="card">
-        <div className="skeleton" style={{ height: 28, width: "50%", marginBottom: 12 }} />
-        <div className="skeleton" style={{ height: 16, width: "30%", marginBottom: 24 }} />
-        <div className="skeleton" style={{ height: 80 }} />
+        <div className="skeleton skeleton-detail-title" />
+        <div className="skeleton skeleton-detail-subtitle" />
+        <div className="skeleton skeleton-detail-body" />
       </div>
     </div>
   );
-  if (!book) return <p className="text-muted" style={{ padding: 24 }}>Book not found.</p>;
+  if (!book) return <p className="text-muted detail-not-found">Book not found.</p>;
 
   const hasFile = !!book.file_type;
   const ICONS = ["📘", "📗", "📙", "📕", "📓", "📔"];
@@ -119,8 +119,8 @@ export default function BookDetail() {
   const isDeclined = myRequest?.status === "DECLINED";
 
   return (
-    <div>
-      <button className="btn btn-secondary btn-sm" onClick={() => navigate("/books")} style={{ marginBottom: 20 }}>
+    <div className="detail-page">
+      <button className="btn btn-secondary btn-sm back-link" onClick={() => navigate("/books")}>
         ← Back to Library
       </button>
 
@@ -128,20 +128,16 @@ export default function BookDetail() {
         <div className="book-detail-layout">
           {/* Main info */}
           <div className="book-detail-main">
-            <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-              <div style={{
-                width: 90, height: 120, background: "linear-gradient(135deg,#EEF2FF,#E0E7FF)",
-                borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "2.8rem", flexShrink: 0, boxShadow: "var(--shadow-sm)"
-              }}>
+            <div className="detail-hero">
+              <div className="detail-cover">
                 {icon}
               </div>
-              <div style={{ flex: 1 }}>
-                <h1 style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.2 }}>
+              <div className="detail-content">
+                <h1 className="detail-title">
                   {book.title}
                 </h1>
-                <p style={{ color: "var(--text-muted)", marginTop: 4, fontStyle: "italic" }}>by {book.author}</p>
-                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <p className="detail-author">by {book.author}</p>
+                <div className="meta-inline">
                   {book.category && <span className="book-category-tag">{book.category}</span>}
                   {book.file_type && (
                     <span className="badge badge-approved">{book.file_type.split("/").pop().toUpperCase()}</span>
@@ -162,7 +158,7 @@ export default function BookDetail() {
               {book.isbn && (
                 <div className="book-meta-item">
                   <span className="meta-key">ISBN</span>
-                  <span className="meta-val" style={{ fontFamily: "monospace" }}>{book.isbn}</span>
+                  <span className="meta-val meta-mono">{book.isbn}</span>
                 </div>
               )}
               {book.file_size && (
@@ -176,8 +172,8 @@ export default function BookDetail() {
             {book.description && (
               <>
                 <div className="divider" />
-                <p style={{ fontWeight: 700, marginBottom: 8, fontSize: "0.9rem" }}>About this book</p>
-                <p style={{ color: "var(--text-secondary)", lineHeight: 1.7, fontSize: "0.9rem" }}>{book.description}</p>
+                <p className="detail-section-title">About this book</p>
+                <p className="detail-copy">{book.description}</p>
               </>
             )}
           </div>
@@ -188,13 +184,13 @@ export default function BookDetail() {
               <h3>Download</h3>
 
               {message.text && (
-                <div className={`alert alert-${message.type === "error" ? "error" : "success"}`} style={{ marginBottom: 12 }}>
+                <div className={`alert alert-${message.type === "error" ? "error" : "success"} detail-alert`}>
                   {message.text}
                 </div>
               )}
 
               {!hasFile && (
-                <div className="empty-state" style={{ padding: "16px 0" }}>
+                <div className="empty-state detail-empty-state">
                   <span className="empty-icon">📭</span>
                   <p>No file uploaded yet.</p>
                 </div>
@@ -211,15 +207,15 @@ export default function BookDetail() {
 
               {/* Pending */}
               {hasFile && myRequest?.status === "PENDING" && (
-                <div style={{ textAlign: "center" }}>
-                  <span className="badge badge-pending" style={{ padding: "6px 14px" }}>⏳ Pending Review</span>
+                <div className="detail-status detail-status-center">
+                  <span className="badge badge-pending badge-large">⏳ Pending Review</span>
                   {myRequest.user_note && (
-                    <div style={{ marginTop: 12, padding: "10px 12px", background: "var(--surface-2)", borderRadius: 8, textAlign: "left" }}>
-                      <p className="text-sm" style={{ color: "var(--text-muted)", marginBottom: 4 }}>Your note:</p>
-                      <p style={{ fontSize: "0.855rem", color: "var(--text-secondary)" }}>{myRequest.user_note}</p>
+                    <div className="detail-note detail-note-neutral">
+                      <p className="text-sm detail-note-label">Your note:</p>
+                      <p className="detail-note-copy">{myRequest.user_note}</p>
                     </div>
                   )}
-                  <p className="text-muted" style={{ marginTop: 10, fontSize: "0.82rem" }}>
+                  <p className="text-muted detail-status-copy">
                     Waiting for admin review.
                   </p>
                 </div>
@@ -227,16 +223,15 @@ export default function BookDetail() {
 
               {/* Approved */}
               {hasFile && myRequest?.status === "APPROVED" && (
-                <div>
+                <div className="detail-status">
                   <span className="badge badge-approved">✓ Approved</span>
                   {myRequest.review_note && (
-                    <div style={{ margin: "10px 0", padding: "10px 12px", background: "var(--success-light)", borderRadius: 8 }}>
-                      <p className="text-sm" style={{ color: "#065F46" }}>Admin note: {myRequest.review_note}</p>
+                    <div className="detail-note detail-note-success">
+                      <p className="text-sm detail-note-copy">Admin note: {myRequest.review_note}</p>
                     </div>
                   )}
                   <button
-                    className="btn btn-success btn-block"
-                    style={{ marginTop: 10 }}
+                    className="btn btn-success btn-block detail-download-btn"
                     onClick={handleDownload}
                     disabled={actionLoading}
                   >
@@ -247,17 +242,17 @@ export default function BookDetail() {
 
               {/* Declined + Request Again */}
               {hasFile && isDeclined && (
-                <div>
+                <div className="detail-status">
                   <span className="badge badge-declined">✗ Declined</span>
 
                   {myRequest.review_note && (
-                    <div style={{ margin: "10px 0", padding: "10px 12px", background: "var(--danger-light)", borderRadius: 8 }}>
-                      <p className="text-sm" style={{ color: "#991B1B" }}>Admin note: {myRequest.review_note}</p>
+                    <div className="detail-note detail-note-danger">
+                      <p className="text-sm detail-note-copy">Admin note: {myRequest.review_note}</p>
                     </div>
                   )}
 
-                  <div className="divider" style={{ margin: "14px 0" }} />
-                  <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: 10 }}>
+                  <div className="divider detail-divider-tight" />
+                  <p className="detail-status-copy">
                     You can submit a new request:
                   </p>
                   <RequestForm

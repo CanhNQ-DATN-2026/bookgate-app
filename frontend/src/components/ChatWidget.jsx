@@ -73,7 +73,7 @@ export function ChatWidget() {
                 <div className="chat-header-sub">Trợ lý thư viện</div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div className="chat-header-actions">
               {history.length > 0 && (
                 <button className="chat-icon-btn" onClick={clear} title="Xóa lịch sử">🗑</button>
               )}

@@ -50,40 +50,40 @@ export default function Dashboard() {
         <div className="stats-grid">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="stat-card">
-              <div className="skeleton" style={{ height: 32, width: 32, borderRadius: "50%", marginBottom: 10 }} />
-              <div className="skeleton" style={{ height: 12, width: 80, marginBottom: 8 }} />
-              <div className="skeleton" style={{ height: 36, width: 60 }} />
+              <div className="skeleton skeleton-stat-icon" />
+              <div className="skeleton skeleton-stat-label" />
+              <div className="skeleton skeleton-stat-value" />
             </div>
           ))}
         </div>
       ) : (
         <div className="stats-grid">
-          <div className="stat-card color-blue" style={{ cursor: "pointer" }} onClick={() => navigate("/admin/users")}>
+          <div className="stat-card color-blue interactive-card" onClick={() => navigate("/admin/users")}>
             <span className="stat-icon">👥</span>
             <div className="label">Total Users</div>
             <div className="value">{stats.users}</div>
           </div>
-          <div className="stat-card color-green" style={{ cursor: "pointer" }} onClick={() => navigate("/admin/books")}>
+          <div className="stat-card color-green interactive-card" onClick={() => navigate("/admin/books")}>
             <span className="stat-icon">📚</span>
             <div className="label">Books</div>
             <div className="value">{stats.books}</div>
           </div>
-          <div className="stat-card color-amber" style={{ cursor: "pointer" }} onClick={() => navigate("/admin/requests")}>
+          <div className="stat-card color-amber interactive-card" onClick={() => navigate("/admin/requests")}>
             <span className="stat-icon">⏳</span>
             <div className="label">Pending Requests</div>
-            <div className="value" style={stats.pending > 0 ? { color: "var(--warning)" } : {}}>
+            <div className={`value${stats.pending > 0 ? " value-emphasis value-warning" : ""}`}>
               {stats.pending}
             </div>
           </div>
-          <div className="stat-card color-rose" style={{ cursor: "pointer" }} onClick={() => navigate("/admin/downloads")}>
+          <div className="stat-card color-rose interactive-card" onClick={() => navigate("/admin/downloads")}>
             <span className="stat-icon">⬇</span>
             <div className="label">Total Downloads</div>
             <div className="value">{stats.downloads}</div>
           </div>
-          <div className="stat-card color-blue" style={{ cursor: "pointer" }} onClick={() => navigate("/admin/upload-requests")}>
+          <div className="stat-card color-blue interactive-card" onClick={() => navigate("/admin/upload-requests")}>
             <span className="stat-icon">📬</span>
             <div className="label">Upload Requests</div>
-            <div className="value" style={stats.uploadPending > 0 ? { color: "var(--primary)" } : {}}>
+            <div className={`value${stats.uploadPending > 0 ? " value-emphasis value-primary" : ""}`}>
               {stats.uploadPending}
             </div>
           </div>
@@ -94,8 +94,7 @@ export default function Dashboard() {
         <div className="alert alert-warning">
           ⚠ You have <strong>{stats.pending}</strong> pending download request{stats.pending > 1 ? "s" : ""} awaiting review.
           <button
-            className="btn btn-sm"
-            style={{ marginLeft: 12, background: "var(--warning)", color: "#fff", border: "none" }}
+            className="btn btn-sm btn-warning-inline"
             onClick={() => navigate("/admin/requests")}
           >
             Review now
@@ -103,10 +102,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
-        <div className="card">
-          <p style={{ fontWeight: 700, marginBottom: 14 }}>Quick Actions</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="section-grid">
+        <div className="card dashboard-panel">
+          <p className="panel-title">Quick Actions</p>
+          <div className="quick-actions">
             <button className="btn btn-primary" onClick={() => navigate("/admin/books/new")}>
               📤 Upload New Book
             </button>
@@ -119,9 +118,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card">
-          <p style={{ fontWeight: 700, marginBottom: 12 }}>How it works</p>
-          <ol style={{ paddingLeft: 20, display: "flex", flexDirection: "column", gap: 8, color: "var(--text-secondary)", fontSize: "0.875rem" }}>
+        <div className="card dashboard-panel">
+          <p className="panel-title">How it works</p>
+          <ol className="mini-list">
             <li>Users browse and request a book download</li>
             <li>Request appears here as <span className="badge badge-pending">PENDING</span></li>
             <li>You approve or decline with an optional note</li>

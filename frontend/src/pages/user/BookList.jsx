@@ -95,11 +95,10 @@ export default function BookList() {
           />
         </div>
         <input
-          className="glass-filter-input"
+          className="glass-filter-input category-filter"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Category"
-          style={{ width: 160 }}
         />
         <button className="btn btn-primary" type="submit">Search</button>
         {(search || category) && (
@@ -113,9 +112,9 @@ export default function BookList() {
         <div className="book-grid">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="book-card" style={{ cursor: "default" }}>
-              <div className="skeleton" style={{ height: 100, marginBottom: 8 }} />
-              <div className="skeleton" style={{ height: 18, width: "80%", marginBottom: 6 }} />
-              <div className="skeleton" style={{ height: 14, width: "60%" }} />
+              <div className="skeleton skeleton-book-cover" />
+              <div className="skeleton skeleton-book-title" />
+              <div className="skeleton skeleton-book-meta" />
             </div>
           ))}
         </div>
@@ -131,17 +130,17 @@ export default function BookList() {
             <div key={book.id} className="book-card" onClick={() => navigate(`/books/${book.id}`)}>
               <div className="book-card-cover">{bookIcon(book.id)}</div>
               <h3>{book.title}</h3>
-              <p className="author">{book.author}</p>
-              <div className="meta">
-                {book.category && <span className="book-category-tag">{book.category}</span>}
-                {book.published_year && <span className="text-sm" style={{ color: "var(--text-subtle)" }}>{book.published_year}</span>}
-                {book.file_type && (
-                  <span className="badge" style={{ fontSize: "0.7rem", padding: "1px 7px", background: "#F0FDF4", color: "#15803D" }}>
-                    {book.file_type.split("/").pop().toUpperCase()}
-                  </span>
-                )}
+                <p className="author">{book.author}</p>
+                <div className="meta">
+                  {book.category && <span className="book-category-tag">{book.category}</span>}
+                  {book.published_year && <span className="book-year">{book.published_year}</span>}
+                  {book.file_type && (
+                    <span className="badge badge-file">
+                      {book.file_type.split("/").pop().toUpperCase()}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
           ))}
         </div>
       )}

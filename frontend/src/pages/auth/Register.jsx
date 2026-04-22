@@ -75,12 +75,12 @@ export default function Register() {
               <label>Confirm Password</label>
               <input type="password" value={form.confirm} onChange={set("confirm")} placeholder="Repeat password" required />
             </div>
-            <button className="btn btn-primary btn-block btn-lg" style={{ marginTop: 4 }} disabled={loading}>
+            <button className="btn btn-primary btn-block btn-lg auth-submit" disabled={loading}>
               {loading ? "Creating account…" : "Create Account"}
             </button>
           </form>
 
-          <div className="auth-footer" style={{ marginTop: 24 }}>
+          <div className="auth-footer auth-footer-spaced">
             Already have an account?&nbsp;<Link to="/login">Sign in</Link>
           </div>
         </div>

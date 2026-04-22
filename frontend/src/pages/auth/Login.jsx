@@ -89,12 +89,12 @@ export default function Login() {
                 required
               />
             </div>
-            <button className="btn btn-primary btn-block btn-lg" style={{ marginTop: 4 }} disabled={loading}>
+            <button className="btn btn-primary btn-block btn-lg auth-submit" disabled={loading}>
               {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
 
-          <div className="auth-footer" style={{ marginTop: 24 }}>
+          <div className="auth-footer auth-footer-spaced">
             Don't have an account?&nbsp;<Link to="/register">Create one</Link>
           </div>
         </div>

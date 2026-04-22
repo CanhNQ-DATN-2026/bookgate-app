@@ -49,14 +49,14 @@ export default function Profile() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 520 }}>
+      <div className="profile-shell">
         <div className="card">
           <div className="profile-header">
             <div className="avatar">{initials}</div>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: "1.05rem" }}>{user?.full_name}</p>
+            <div className="profile-identity">
+              <p className="profile-name">{user?.full_name}</p>
               <p className="text-muted text-sm">{user?.email}</p>
-              <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
+              <div className="profile-meta-row">
                 <span className="badge badge-user">{user?.role}</span>
                 <span className="text-muted text-sm">
                   Joined {new Date(user?.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
