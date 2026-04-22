@@ -96,7 +96,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          values_file="helm-repo/bookgate/values.yaml"
+          values_file="helm-repo/bookgate/values-dev.yaml"
           image_tag="${{ steps.image.outputs.tag }}"
 
           perl -0pi -e 's/(chatService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' "$values_file"
@@ -112,17 +112,17 @@ jobs:
           image_tag="${GITHUB_SHA::7}"
 
           update_values() {
-            perl -0pi -e 's/(chatService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' bookgate/values.yaml
+            perl -0pi -e 's/(chatService:\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"$image_tag"'${3}/' bookgate/values-dev.yaml
           }
 
           update_values
 
-          if git diff --quiet -- bookgate/values.yaml; then
+          if git diff --quiet -- bookgate/values-dev.yaml; then
             echo "Helm values already point to ${image_tag}; nothing to commit."
             exit 0
           fi
 
-          git add bookgate/values.yaml
+          git add bookgate/values-dev.yaml
           git commit -m "chore: bump chat-service image tag to ${image_tag}"
 
           for attempt in 1 2 3; do
@@ -134,12 +134,12 @@ jobs:
             git pull --rebase origin main
             update_values
 
-            if git diff --quiet -- bookgate/values.yaml; then
+            if git diff --quiet -- bookgate/values-dev.yaml; then
               echo "Desired chat image tag already present after rebase."
               exit 0
             fi
 
-            git add bookgate/values.yaml
+            git add bookgate/values-dev.yaml
             git commit --amend --no-edit
           done
 
