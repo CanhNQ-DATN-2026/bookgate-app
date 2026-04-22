@@ -1,6 +1,7 @@
 name: Build And Publish API Service
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main

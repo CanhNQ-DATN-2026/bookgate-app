@@ -1,6 +1,7 @@
 name: Build And Publish Chat Service
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
