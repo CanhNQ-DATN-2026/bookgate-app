@@ -1,0 +1,145 @@
+name: Reusable - Build Service and Update Helm
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+        description: "Short service name, e.g. api-service"
+      image_repo:
+        required: true
+        type: string
+        description: "ECR image path, e.g. bookgate/api-service"
+      service_path:
+        required: true
+        type: string
+        description: "Docker build context path relative to repo root"
+      helm_key:
+        required: true
+        type: string
+        description: "Top-level key in values-dev.yaml, e.g. apiService"
+
+jobs:
+  build-push-and-update:
+    name: Build, Push and Update Helm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+      HELM_REPO: CanhNQ-DATN-2026/helm-repo
+
+    steps:
+      - name: Checkout App Repo
+        uses: actions/checkout@v4
+
+      - name: Validate ECR Registry
+        id: registry
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          : "${AWS_REGION:?AWS_REGION repository variable is required}"
+          : "${ECR_REGISTRY:?ECR_REGISTRY repository variable is required}"
+
+          ecr_registry="$(printf '%s' "$ECR_REGISTRY" | tr -d '\r' | xargs)"
+          echo "value=$ecr_registry" >> "$GITHUB_OUTPUT"
+
+          case "$ecr_registry" in
+            */*)
+              echo "ECR_REGISTRY must be the registry host only, e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com"
+              exit 1
+              ;;
+            *.dkr.ecr."$AWS_REGION".amazonaws.com) ;;
+            *)
+              echo "ECR_REGISTRY ($ecr_registry) does not match AWS_REGION ($AWS_REGION)"
+              exit 1
+              ;;
+          esac
+
+      - name: Set Image Tag
+        id: image
+        shell: bash
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: github-actions-bookgate-${{ inputs.service_name }}-build
+
+      - name: Login To Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build And Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.service_path }}
+          push: true
+          tags: ${{ steps.registry.outputs.value }}/${{ inputs.image_repo }}:${{ steps.image.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Checkout Helm Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.HELM_REPO }}
+          ref: main
+          token: ${{ secrets.HELM_REPO_PUSH_TOKEN }}
+          path: helm-repo
+
+      - name: Commit And Push Helm Values
+        shell: bash
+        env:
+          HELM_KEY: ${{ inputs.helm_key }}
+          SERVICE_NAME: ${{ inputs.service_name }}
+        run: |
+          set -euo pipefail
+
+          cd helm-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          image_tag="${GITHUB_SHA::7}"
+
+          update_values() {
+            perl -0pi -e 's/('"${HELM_KEY}"':\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"${image_tag}"'${3}/' bookgate/values-dev.yaml
+          }
+
+          update_values
+
+          if git diff --quiet -- bookgate/values-dev.yaml; then
+            echo "Helm values already point to ${image_tag}; nothing to commit."
+            exit 0
+          fi
+
+          git add bookgate/values-dev.yaml
+          git commit -m "chore: bump ${SERVICE_NAME} image tag to ${image_tag}"
+
+          for attempt in 1 2 3; do
+            if git push origin main; then
+              exit 0
+            fi
+
+            echo "Push failed on attempt ${attempt}; rebasing and retrying."
+            git pull --rebase origin main
+            update_values
+
+            if git diff --quiet -- bookgate/values-dev.yaml; then
+              echo "Desired ${SERVICE_NAME} image tag already present after rebase."
+              exit 0
+            fi
+
+            git add bookgate/values-dev.yaml
+            git commit --amend --no-edit
+          done
+
+          echo "Failed to push updated Helm values after 3 attempts."
+          exit 1
