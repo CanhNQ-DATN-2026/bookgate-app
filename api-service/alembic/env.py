@@ -9,8 +9,9 @@ from app.models import User, Book, DownloadRequest, DownloadHistory, BookUploadR
 
 config = context.config
 
-# Override sqlalchemy.url with the env var
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+# ConfigParser treats "%" as interpolation syntax. DATABASE_URL may contain a
+# URL-encoded password, so escape "%" before handing it to Alembic config.
+config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"].replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
