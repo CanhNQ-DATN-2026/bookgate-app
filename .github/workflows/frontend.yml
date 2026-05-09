@@ -12,6 +12,10 @@ concurrency:
   group: bookgate-frontend-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build-and-update:
     uses: ./.github/workflows/build-service.yml
