@@ -18,7 +18,7 @@ on:
       helm_key:
         required: true
         type: string
-        description: "Top-level key in values-dev.yaml, e.g. apiService"
+        description: "Top-level key in values.yaml, e.g. apiService"
 
 jobs:
   build-push-and-update:
@@ -108,19 +108,20 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           image_tag="${GITHUB_SHA::7}"
+          values_file="bookgate/values.yaml"
 
           update_values() {
-            perl -0pi -e 's/('"${HELM_KEY}"':\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"${image_tag}"'${3}/' bookgate/values-dev.yaml
+            perl -0pi -e 's/('"${HELM_KEY}"':\n(?:.*\n)*?\s+tag:\s+\")([^\"]+)(\")/${1}'"${image_tag}"'${3}/' "${values_file}"
           }
 
           update_values
 
-          if git diff --quiet -- bookgate/values-dev.yaml; then
+          if git diff --quiet -- "${values_file}"; then
             echo "Helm values already point to ${image_tag}; nothing to commit."
             exit 0
           fi
 
-          git add bookgate/values-dev.yaml
+          git add "${values_file}"
           git commit -m "chore: bump ${SERVICE_NAME} image tag to ${image_tag}"
 
           for attempt in 1 2 3; do
@@ -132,12 +133,12 @@ jobs:
             git pull --rebase origin main
             update_values
 
-            if git diff --quiet -- bookgate/values-dev.yaml; then
+            if git diff --quiet -- "${values_file}"; then
               echo "Desired ${SERVICE_NAME} image tag already present after rebase."
               exit 0
             fi
 
-            git add bookgate/values-dev.yaml
+            git add "${values_file}"
             git commit --amend --no-edit
           done
 
